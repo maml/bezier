@@ -1,0 +1,19 @@
+//
+//  OvalView.h
+//  ViewTest
+//
+//  Created by Matthew Loseke on 11/11/13.
+//  Copyright (c) 2013 foo. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface LineView : UIView
+
+- (id)initWithFrame:(CGRect)frame BeginningPoint:(CGPoint)_beginningPoint EndingPoint:(CGPoint)_endingPoint Tag:(int)tag;
+
+@property CGPoint beginningPoint;
+@property CGPoint endingPoint;
+@property UIColor *lineColor;
+
+@end
