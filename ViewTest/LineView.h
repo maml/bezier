@@ -10,10 +10,11 @@
 
 @interface LineView : UIView
 
-- (id)initWithFrame:(CGRect)frame BeginningPoint:(CGPoint)_beginningPoint EndingPoint:(CGPoint)_endingPoint Tag:(int)tag;
+- (id)initWithFrame:(CGRect)frame BeginningPoint:(CGPoint)_beginningPoint EndingPoint:(CGPoint)_endingPoint Degrees:(int)degrees Tag:(int)tag;
 
 @property CGPoint beginningPoint;
 @property CGPoint endingPoint;
+@property int degrees;
 @property UIColor *lineColor;
 
 @end

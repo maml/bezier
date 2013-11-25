@@ -10,14 +10,15 @@
 
 @implementation LineView
 
-@synthesize beginningPoint, endingPoint, lineColor;
+@synthesize beginningPoint, endingPoint, degrees, lineColor;
 
-- (id)initWithFrame:(CGRect)frame BeginningPoint:(CGPoint)_beginningPoint EndingPoint:(CGPoint)_endingPoint Tag:(int)tag
+- (id)initWithFrame:(CGRect)frame BeginningPoint:(CGPoint)_beginningPoint EndingPoint:(CGPoint)_endingPoint Degrees:(int)_degrees Tag:(int)tag
 {
     self = [super initWithFrame:frame];
     if (self) {
         beginningPoint = _beginningPoint;
         endingPoint = _endingPoint;
+        degrees = _degrees;
         [self setTag:tag];
         [self setLineColor:[UIColor colorWithRed:235.0/255.0 green:235.0/255.0 blue:235.0/255.0 alpha:1.0]];
         [self setBackgroundColor:[UIColor clearColor]];
