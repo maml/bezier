@@ -110,17 +110,10 @@
     CGPoint outerPoint = CGPointMake((innerRadius + dbBasedOuterPoint) * cos((degrees * M_PI / 180)), (innerRadius + dbBasedOuterPoint) * sin((degrees * M_PI / 180)));
    
     LineView *newLine = [[LineView alloc] initWithFrame:rect BeginningPoint:lineView.beginningPoint EndingPoint:outerPoint Degrees:lineView.degrees Tag:tagCounter];
-    [[self view] addSubview:newLine];
     [newLine setLineColor:[UIColor colorWithRed:252.0f/255.0f green:63.0f/255.0f blue:67.0f/255.0f alpha:1.0f]];
-    [newLine setNeedsDisplay];
+    [[self view] addSubview:newLine];
     
-    // LineView's are drawn with UIBezierPath - they get their color from having had the stroke set and then calling stroke.
-    // lineColor is a synthesized property with a type of UIColor that's upon which we call setStroke. Calling setNeedsDisplay
-    //invalidates the view causing it to be updated in the next drawing cylce.
-    //[lineView setLineColor:[UIColor colorWithRed:252.0f/255.0f green:63.0f/255.0f blue:67.0f/255.0f alpha:1.0f]];
-    //[lineView setNeedsDisplay];
     tagCounter++;
-    
 }
 
 - (void)setupAVAudioRecorder
