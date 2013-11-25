@@ -14,12 +14,12 @@
 
 @implementation ViewController
 
-@synthesize timer, tagCounter;
+@synthesize timer, tagCounter, recorder;
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+    [self setupAVAudioRecorder];
     tagCounter = 100;
     
     // The desired affect is a series of straight lines drawn about an implied circle.
@@ -57,7 +57,7 @@
         // see: View Programming Guide for iOS -> View Geometry and Coordinate Systems -> Coordinate System Transformations
         // "Rather than fix the position of an object at some location in your view, it is simpler to create each object relative
         // to a fixed point, typically (0, 0), and use a transform to position the object immediately prior to drawing."
-        [[self view] addSubview:[[LineView alloc] initWithFrame:rect BeginningPoint:innerPoint EndingPoint:outerPoint Tag:(int)tagCounter]];
+        [[self view] addSubview:[[LineView alloc] initWithFrame:rect BeginningPoint:innerPoint EndingPoint:outerPoint Degrees:degrees Tag:(int)tagCounter]];
         tagCounter++;
     }
     tagCounter = 100;
@@ -65,6 +65,7 @@
 }
 
 - (IBAction)animate:(id)sender {
+    [recorder recordForDuration:30];
     timer = [NSTimer scheduledTimerWithTimeInterval:0.25 target:self selector:@selector(timerDidTick) userInfo:nil repeats:YES];
 }
 
@@ -72,12 +73,88 @@
 {
     LineView *lineView = (LineView *)[self.view viewWithTag:tagCounter];
     
+    // On each tick of the timer we want to draw a new instance of LineView. The new instance of LineView that we draw
+    // will be based on the lineView we have a reference to from above. Since instances of LineView have its beginning
+    // and ending points as properties we'll be able to draw essentially the same line. But instead of drawing the same
+    // line we want the line we draw to be representative of the current decibel reading of this controller's instance of
+    // AVAudioRecorder taken immediately before the drawing operation. To make the line representative of the decibel
+    // reading we can calculate what percentage of the total possible decibel values is the current decibel reading. Then, whatever
+    // percentage that is, we can make the line's length the same percentage of the total possible length of the line, where
+    // the total possible length of the line is the distance between the two points (beginning and end points) that make up
+    // the line we're basing the new line off of. Since we've hardcoded the inner and outer radii we know what this is:
+    // 130 - 70, or, 60.
+    // To get the new ending coordinate we need to calculate the ∆x and ∆y from the original beginning and ending points,
+    // mulitply those values by the percentage of the decibel reading, and then plug everything back into the pythagorean
+    // equation and solve for the new outer x,y coordinate. not sure how to do that with code so . . .
+    // if when we originally create the base line we store the degree used to calculate its points we should be able to more
+    // easily get the new coordinates.
+  
+    // second time this appears, refactor.
+    int innerRadius = 70;
+    int outerRadius = innerRadius + 60;
+    CGPoint center = self.view.center;
+    CGRect rect = CGRectMake((center.x - outerRadius), (center.y - outerRadius), 2 * outerRadius, 2 * outerRadius);
+   
+    int degrees = lineView.degrees;
+    //int hardcodedRandomizedRadiusHaha = (innerRadius + arc4random() % 70);
+
+    [recorder updateMeters];
+    float dbLevel = [recorder averagePowerForChannel:0];
+    float dbLevelMin = -65.0;
+    float dbLevelMax = 5.0;
+    float dbLevelRatio = (dbLevel - dbLevelMin) / abs(dbLevelMin - dbLevelMax);
+    //NSLog(@"%f", dbLevel);
+    int radiusDiff = outerRadius - innerRadius;
+    float dbBasedOuterPoint = dbLevelRatio * radiusDiff;
+    
+    CGPoint outerPoint = CGPointMake((innerRadius + dbBasedOuterPoint) * cos((degrees * M_PI / 180)), (innerRadius + dbBasedOuterPoint) * sin((degrees * M_PI / 180)));
+   
+    LineView *newLine = [[LineView alloc] initWithFrame:rect BeginningPoint:lineView.beginningPoint EndingPoint:outerPoint Degrees:lineView.degrees Tag:tagCounter];
+    [[self view] addSubview:newLine];
+    [newLine setLineColor:[UIColor colorWithRed:252.0f/255.0f green:63.0f/255.0f blue:67.0f/255.0f alpha:1.0f]];
+    [newLine setNeedsDisplay];
+    
     // LineView's are drawn with UIBezierPath - they get their color from having had the stroke set and then calling stroke.
     // lineColor is a synthesized property with a type of UIColor that's upon which we call setStroke. Calling setNeedsDisplay
     //invalidates the view causing it to be updated in the next drawing cylce.
-    [lineView setLineColor:[UIColor colorWithRed:252.0f/255.0f green:63.0f/255.0f blue:67.0f/255.0f alpha:1.0f]];
-    [lineView setNeedsDisplay];
+    //[lineView setLineColor:[UIColor colorWithRed:252.0f/255.0f green:63.0f/255.0f blue:67.0f/255.0f alpha:1.0f]];
+    //[lineView setNeedsDisplay];
     tagCounter++;
+    
 }
 
+- (void)setupAVAudioRecorder
+{
+    // settings for the recorder
+    NSMutableDictionary *recordSetting = [[NSMutableDictionary alloc] init];
+    
+    [recordSetting setValue:[NSNumber numberWithInt:kAudioFormatMPEG4AAC] forKey:AVFormatIDKey];
+    [recordSetting setValue:[NSNumber numberWithFloat:44100.0] forKey:AVSampleRateKey];
+    [recordSetting setValue:[NSNumber numberWithInt: 2] forKey:AVNumberOfChannelsKey];
+   
+    // sets the path for audio file (placeholder)
+    NSArray *pathComponents = [NSArray arrayWithObjects:
+                               [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject],
+                               @"foo.m4a",
+                               nil];
+    NSURL *outputFileURL = [NSURL fileURLWithPathComponents:pathComponents];
+
+    // initiate recorder
+    NSError *error;
+    recorder = [[AVAudioRecorder alloc] initWithURL:outputFileURL settings:recordSetting error:&error];
+    recorder.delegate = self;
+    [recorder prepareToRecord];
+    recorder.meteringEnabled = YES;
+}
+
+
+
 @end
+
+
+
+
+
+
+
+
