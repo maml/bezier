@@ -96,14 +96,19 @@
     CGRect rect = CGRectMake((center.x - outerRadius), (center.y - outerRadius), 2 * outerRadius, 2 * outerRadius);
    
     int degrees = lineView.degrees;
-    //int hardcodedRandomizedRadiusHaha = (innerRadius + arc4random() % 70);
 
     [recorder updateMeters];
+    
+    // 0 dB indicates full scale, or maximum power
+    // -160 dB indicates minimum power, near silence
+    // return value may exceed 0 if signal's hot enough
+   
     float dbLevel = [recorder averagePowerForChannel:0];
-    float dbLevelMin = -65.0;
-    float dbLevelMax = 5.0;
+    float dbLevelMin = -160.0;
+    float dbLevelMax = 0.0;
+   
     float dbLevelRatio = (dbLevel - dbLevelMin) / abs(dbLevelMin - dbLevelMax);
-    //NSLog(@"%f", dbLevel);
+
     int radiusDiff = outerRadius - innerRadius;
     float dbBasedOuterPoint = dbLevelRatio * radiusDiff;
     
